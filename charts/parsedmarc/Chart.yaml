@@ -2,7 +2,7 @@ apiVersion: v2
 name: parsedmarc
 description: A Helm chart for parsedmarc - DMARC report analyzer
 type: application
-version: 0.2.0
+version: 0.2.1
 appVersion: "8.12.0"
 
 keywords:
