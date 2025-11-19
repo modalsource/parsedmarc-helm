@@ -111,6 +111,16 @@ opensearch:
       network.host: 0.0.0.0
       plugins.security.disabled: true
 
+  # Sysctls - required for OpenSearch
+  # If you cannot set sysctls (some managed Kubernetes), disable this and set vm.max_map_count on nodes
+  sysctlInit:
+    enabled: true
+  
+  # Security context for init container
+  securityContext:
+    runAsUser: 0
+    privileged: true
+
 # OpenSearch Dashboards dependency configuration
 opensearch-dashboards:
   enabled: true
