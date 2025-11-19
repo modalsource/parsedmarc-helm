@@ -9,6 +9,7 @@ data:
     [general]
     save_aggregate = True
     save_forensic = True
+    save_smtp_tls = True
 
     [imap]
     host = {{ .Values.parsedmarc.imap.host }}
