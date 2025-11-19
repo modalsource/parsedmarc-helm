@@ -1,0 +1,82 @@
+# Example values for Pod Security Standards (PSS) restricted environments
+# Use this when your cluster doesn't allow privileged containers
+
+# parsedmarc configuration (same as regular values.yaml)
+parsedmarc:
+  image:
+    repository: ghcr.io/modalsource/parsedmarc-helm
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  replicaCount: 1
+  
+  imap:
+    host: ""
+    user: ""
+    password: ""
+
+# OpenSearch configuration for restricted PSS
+opensearch:
+  enabled: true
+  replicas: 1
+  
+  # IMPORTANT: Disable sysctlInit because it requires privileged containers
+  sysctlInit:
+    enabled: false
+  
+  # Disable the fsgroup-volume init container (runs as root)
+  # OpenSearch will handle permissions itself
+  extraInitContainers: []
+  
+  # Security context - strict non-root
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    runAsUser: 1000
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+  
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  
+  persistence:
+    enabled: true
+    size: 8Gi
+  
+  config:
+    opensearch.yml: |
+      cluster.name: parsedmarc-cluster
+      network.host: 0.0.0.0
+      plugins.security.disabled: true
+
+# OpenSearch Dashboards
+opensearch-dashboards:
+  enabled: true
+  
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    runAsUser: 1000
+    allowPrivilegeEscalation: false
+  
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000

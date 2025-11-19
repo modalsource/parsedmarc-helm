@@ -261,3 +261,71 @@ If issues persist:
 2. Describe the resource: `kubectl describe pod/deployment/statefulset -n <namespace> <name>`
 3. Check events: `kubectl get events -n <namespace> --sort-by='.lastTimestamp'`
 4. Open an issue: https://github.com/modalsource/parsedmarc-helm/issues
+
+## Pod Security Policy / Pod Security Standards Issues
+
+### Error: "container's runAsUser breaks non-root policy"
+
+**Cause:**
+Your cluster enforces Pod Security Standards (PSS) or Pod Security Policies (PSP) that prevent running containers as root.
+
+**Solution:**
+
+The chart is configured to run OpenSearch as user 1000 (non-root) by default. If you still see this error:
+
+1. **Check the sysctlInit container** - It needs to run as root (privileged) to set vm.max_map_count:
+
+```yaml
+opensearch:
+  sysctlInit:
+    enabled: false  # Disable if privileged containers not allowed
+```
+
+2. **Set vm.max_map_count on nodes instead** (see above section)
+
+3. **For very strict PSS/PSP environments**, disable sysctlInit and use a DaemonSet or manual configuration
+
+### Error: "containers must not set securityContext.privileged"
+
+**Cause:**
+The sysctlInit container requires privileged mode to set kernel parameters.
+
+**Solution:**
+
+Disable the init container and set vm.max_map_count manually on nodes:
+
+```yaml
+opensearch:
+  sysctlInit:
+    enabled: false
+```
+
+Then configure nodes as described in the vm.max_map_count section above.
+
+### Pod Security Standards Compliance
+
+For PSS `restricted` level:
+
+```yaml
+opensearch:
+  # Disable privileged init container
+  sysctlInit:
+    enabled: false
+  
+  # Ensure non-root
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  
+  # Drop all capabilities
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+```
+
+Then use one of these approaches for vm.max_map_count:
+- DaemonSet with hostPID (runs in kube-system, outside PSS scope)
+- Manual node configuration
+- Cloud provider node pool configuration
