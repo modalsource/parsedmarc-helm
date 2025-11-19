@@ -103,6 +103,9 @@ opensearch:
   persistence:
     enabled: true
     size: 8Gi
+    # Disable fsgroup-volume init container (runs as root)
+    # Safe to disable because podSecurityContext.fsGroup handles permissions
+    enableInitChown: false
 
   # Security configuration
   config:

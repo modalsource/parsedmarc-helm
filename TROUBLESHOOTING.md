@@ -329,3 +329,30 @@ Then use one of these approaches for vm.max_map_count:
 - DaemonSet with hostPID (runs in kube-system, outside PSS scope)
 - Manual node configuration
 - Cloud provider node pool configuration
+
+### Error: "container's runAsUser breaks non-root policy" for fsgroup-volume
+
+**Full Error:**
+```
+container's runAsUser breaks non-root policy 
+(pod: "opensearch-cluster-master-0", container: fsgroup-volume)
+```
+
+**Cause:**
+The OpenSearch chart includes a `fsgroup-volume` init container that runs as root to set file permissions on the persistent volume.
+
+**Solution:**
+
+Disable this init container - it's not needed when using `podSecurityContext.fsGroup`:
+
+```yaml
+opensearch:
+  persistence:
+    enabled: true
+    enableInitChown: false  # Disable the fsgroup-volume init container
+  
+  podSecurityContext:
+    fsGroup: 1000  # This handles permissions instead
+```
+
+The `podSecurityContext.fsGroup` setting ensures that all files created in the volume are owned by group 1000, making the init container unnecessary.

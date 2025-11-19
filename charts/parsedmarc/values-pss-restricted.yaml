@@ -24,10 +24,6 @@ opensearch:
   sysctlInit:
     enabled: false
   
-  # Disable the fsgroup-volume init container (runs as root)
-  # OpenSearch will handle permissions itself
-  extraInitContainers: []
-  
   # Security context - strict non-root
   securityContext:
     capabilities:
@@ -57,6 +53,8 @@ opensearch:
   persistence:
     enabled: true
     size: 8Gi
+    # Disable fsgroup-volume init container (runs as root)
+    enableInitChown: false
   
   config:
     opensearch.yml: |
