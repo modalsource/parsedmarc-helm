@@ -12,20 +12,21 @@ parsedmarc is a Python-based DMARC report analyzer that parses DMARC aggregate a
 
 ## Installing the Chart
 
-### Add Dependencies
+### Add Helm Repository
 
-First, update the chart dependencies:
+Add the Helm repository hosted on GitHub Pages:
 
 ```bash
-helm dependency update charts/parsedmarc
+helm repo add parsedmarc https://modalsource.github.io/parsedmarc-helm
+helm repo update
 ```
 
-### Install the Chart
+### Install from Repository
 
 To install the chart with the release name `parsedmarc`:
 
 ```bash
-helm install parsedmarc charts/parsedmarc \
+helm install parsedmarc parsedmarc/parsedmarc \
   --set parsedmarc.imap.host=imap.example.com \
   --set parsedmarc.imap.user=dmarc@example.com \
   --set parsedmarc.imap.password=yourpassword
@@ -34,6 +35,17 @@ helm install parsedmarc charts/parsedmarc \
 Or create a `values.yaml` file with your configuration:
 
 ```bash
+helm install parsedmarc parsedmarc/parsedmarc -f values.yaml
+```
+
+### Install from Source
+
+Alternatively, install directly from the source:
+
+```bash
+git clone https://github.com/modalsource/parsedmarc-helm.git
+cd parsedmarc-helm
+helm dependency update charts/parsedmarc
 helm install parsedmarc charts/parsedmarc -f values.yaml
 ```
 
