@@ -1,5 +1,7 @@
 # parsedmarc Docker Image
 
+Custom Docker image for parsedmarc with enhanced secrets management.
+
 This Docker image includes a custom entrypoint script to handle password injection for parsedmarc.
 
 ## Problem

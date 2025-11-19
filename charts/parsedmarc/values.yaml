@@ -3,7 +3,7 @@
 parsedmarc:
   # Image configuration
   image:
-    repository: ghcr.io/your-org/parsedmarc
+    repository: ghcr.io/modalsource/parsedmarc-helm
     pullPolicy: IfNotPresent
     tag: "latest"
 
