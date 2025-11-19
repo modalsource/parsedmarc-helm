@@ -17,9 +17,14 @@ RUN pip install --no-cache-dir \
     opensearch-py \
     kafka-python
 
-# Create parsedmarc user
+# Create parsedmarc user and required directories
 RUN useradd -m -u 1000 parsedmarc && \
-    chown -R parsedmarc:parsedmarc /app
+    mkdir -p /tmp /etc/parsedmarc && \
+    chown -R parsedmarc:parsedmarc /app /tmp
+
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Switch to non-root user
 USER parsedmarc
@@ -28,5 +33,8 @@ USER parsedmarc
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD pgrep -f parsedmarc || exit 1
 
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
 # Default command (will be overridden by Kubernetes deployment)
-CMD ["parsedmarc", "--help"]
+CMD []

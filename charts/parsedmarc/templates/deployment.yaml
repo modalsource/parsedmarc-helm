@@ -48,10 +48,6 @@ spec:
             - name: config
               mountPath: /etc/parsedmarc
               readOnly: true
-          command:
-            - parsedmarc
-            - -c
-            - /etc/parsedmarc/parsedmarc.ini
           resources:
             {{- toYaml .Values.parsedmarc.resources | nindent 12 }}
       volumes:
