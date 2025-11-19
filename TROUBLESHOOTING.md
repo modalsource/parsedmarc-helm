@@ -14,25 +14,7 @@ OpenSearch/Elasticsearch requires the kernel parameter `vm.max_map_count` to be 
 
 **Solutions:**
 
-#### Option 1: Enable sysctlInit (Default - Recommended)
-
-The Helm chart includes an init container that automatically sets this value:
-
-```yaml
-opensearch:
-  sysctlInit:
-    enabled: true  # This is the default
-```
-
-**Requirements:**
-- The init container runs as privileged
-- Your Kubernetes cluster must allow privileged containers
-
-**Limitations:**
-- Some managed Kubernetes services (GKE Autopilot, EKS Fargate) don't allow privileged containers
-- Pod Security Policies/Standards may block this
-
-#### Option 2: Set on Kubernetes Nodes (Permanent Fix)
+#### Option 1: Set on Kubernetes Nodes (Recommended - Default Approach)
 
 Set `vm.max_map_count` directly on each Kubernetes node:
 
@@ -40,18 +22,35 @@ Set `vm.max_map_count` directly on each Kubernetes node:
 # On each node, run:
 sudo sysctl -w vm.max_map_count=262144
 
-# To make it permanent:
+# To make it permanent (survives reboot):
 echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 ```
 
-Then disable the init container:
+This is the recommended approach because:
+- It's permanent (survives node reboots)
+- Works with clusters that enforce non-root policies
+- No privileged containers required
+
+#### Option 2: Enable sysctlInit (Requires Privileged Containers)
+
+The Helm chart includes an optional init container that automatically sets this value:
 
 ```yaml
 opensearch:
   sysctlInit:
-    enabled: false
+    enabled: true  # Disabled by default
 ```
+
+**Requirements:**
+- The init container runs as privileged and as root
+- Your Kubernetes cluster must allow privileged containers
+- Non-root Pod Security Policies/Standards will block this
+
+**Limitations:**
+- Some managed Kubernetes services (GKE Autopilot, EKS Fargate) don't allow privileged containers
+- Pod Security Standards (restricted/baseline) will block this
+- Violates non-root security policies
 
 #### Option 3: Use DaemonSet (Automated Node Configuration)
 
@@ -271,19 +270,34 @@ Your cluster enforces Pod Security Standards (PSS) or Pod Security Policies (PSP
 
 **Solution:**
 
-The chart is configured to run OpenSearch as user 1000 (non-root) by default. If you still see this error:
+The chart is configured by default to comply with non-root policies:
 
-1. **Check the sysctlInit container** - It needs to run as root (privileged) to set vm.max_map_count:
+1. **sysctlInit is disabled by default** - The init container that sets vm.max_map_count is disabled to avoid privileged containers:
 
 ```yaml
 opensearch:
   sysctlInit:
-    enabled: false  # Disable if privileged containers not allowed
+    enabled: false  # This is the default
 ```
 
-2. **Set vm.max_map_count on nodes instead** (see above section)
+2. **Set vm.max_map_count on nodes instead** - You must configure the kernel parameter manually on each node (see section above)
 
-3. **For very strict PSS/PSP environments**, disable sysctlInit and use a DaemonSet or manual configuration
+3. **fsgroup-volume init container is disabled** - The init container that does `chown` is also disabled:
+
+```yaml
+opensearch:
+  persistence:
+    enableInitChown: false  # This is the default
+  
+  podSecurityContext:
+    fsGroup: 1000  # Handles permissions instead
+```
+
+If you still see "container's runAsUser breaks non-root policy" errors, check which container is causing it:
+
+- **Container: `sysctl`** - The sysctlInit container. Ensure it's disabled (see above)
+- **Container: `fsgroup-volume`** - Ensure `enableInitChown: false` is set
+- **Container: opensearch main** - Check that `securityContext.runAsUser: 1000` is set
 
 ### Error: "containers must not set securityContext.privileged"
 

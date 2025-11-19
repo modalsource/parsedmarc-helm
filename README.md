@@ -10,19 +10,44 @@ parsedmarc is a Python-based DMARC report analyzer that parses DMARC aggregate a
 - Helm 3.0+
 - PV provisioner support in the underlying infrastructure (for OpenSearch persistence)
 - **Important for OpenSearch**: The kernel parameter `vm.max_map_count` must be at least 262144
-  - The chart includes an init container to set this automatically (requires privileged containers)
-  - Alternatively, set it manually on nodes (see [TROUBLESHOOTING.md](TROUBLESHOOTING.md))
+  - By default, the chart does NOT set this automatically (requires privileged containers)
+  - You must set it manually on nodes before installation (see instructions below)
 
 ## Important: OpenSearch System Requirements
 
-OpenSearch requires `vm.max_map_count` to be set to at least 262144. The chart handles this automatically with a privileged init container (enabled by default).
+OpenSearch requires `vm.max_map_count` to be set to at least 262144 on all nodes where OpenSearch pods will run.
+
+### Setting vm.max_map_count on Nodes
+
+**For most Kubernetes clusters, run this on each node:**
+
+```bash
+# Temporarily (until reboot)
+sudo sysctl -w vm.max_map_count=262144
+
+# Permanently (survives reboot)
+echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+```
+
+**For managed Kubernetes (GKE, EKS, AKS):**
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#setting-vmmaxmapcount-on-managed-kubernetes) for platform-specific instructions.
+
+**If you have privileged container access:**
+You can enable the automatic sysctl init container:
+
+```yaml
+opensearch:
+  sysctlInit:
+    enabled: true  # Requires privileged containers
+```
 
 **If you see this error:**
 ```
 max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
 ```
 
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#error-max-virtual-memory-areas-vmmaxmapcount-65530-is-too-low) for solutions.
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md#error-max-virtual-memory-areas-vmmaxmapcount-65530-is-too-low) for detailed solutions.
 
 ## Installing the Chart
 

@@ -115,9 +115,11 @@ opensearch:
       plugins.security.disabled: true
 
   # Sysctls - required for OpenSearch
-  # If you cannot set sysctls (some managed Kubernetes), disable this and set vm.max_map_count on nodes
+  # IMPORTANT: Setting sysctls requires a privileged init container that runs as root
+  # If your cluster enforces non-root policies, set this to false and configure
+  # vm.max_map_count on your nodes manually (see README for instructions)
   sysctlInit:
-    enabled: true
+    enabled: false
   
   # Pod security context (pod-level settings)
   podSecurityContext:
