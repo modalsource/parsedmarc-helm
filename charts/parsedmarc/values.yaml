@@ -88,53 +88,30 @@ parsedmarc:
 # OpenSearch dependency configuration
 opensearch:
   enabled: true
+  singleNode: true
   replicas: 1
   
   # Resource limits
-  resources:
-    requests:
-      cpu: 500m
-      memory: 1Gi
-    limits:
-      cpu: 1000m
-      memory: 2Gi
+  #resources:
+  #  requests:
+  #    cpu: 500m
+  #    memory: 1Gi
+  #  limits:
+  #    cpu: 1000m
+  #    memory: 2Gi
 
   # Persistence
   persistence:
     enabled: true
     size: 8Gi
-    # Disable fsgroup-volume init container (runs as root)
-    # Safe to disable because podSecurityContext.fsGroup handles permissions
-    enableInitChown: false
 
   # Security configuration
   config:
     opensearch.yml: |
       cluster.name: parsedmarc-cluster
       network.host: 0.0.0.0
+      discovery.type: single-node
       plugins.security.disabled: true
-
-  # Sysctls - required for OpenSearch
-  # IMPORTANT: Setting sysctls requires a privileged init container that runs as root
-  # If your cluster enforces non-root policies, set this to false and configure
-  # vm.max_map_count on your nodes manually (see README for instructions)
-  sysctlInit:
-    enabled: false
-  
-  # Pod security context (pod-level settings)
-  podSecurityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    fsGroup: 1000
-  
-  # Container security context (container-level settings)
-  securityContext:
-    capabilities:
-      drop:
-        - ALL
-    runAsNonRoot: true
-    runAsUser: 1000
-    allowPrivilegeEscalation: false
 
 # OpenSearch Dashboards dependency configuration
 opensearch-dashboards:
