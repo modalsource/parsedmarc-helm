@@ -116,17 +116,20 @@ opensearch:
   sysctlInit:
     enabled: true
   
-  # Security context - run as non-root user 1000
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    fsGroup: 1000
-  
-  # Pod security context
+  # Pod security context (pod-level settings)
   podSecurityContext:
     runAsNonRoot: true
     runAsUser: 1000
     fsGroup: 1000
+  
+  # Container security context (container-level settings)
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    runAsUser: 1000
+    allowPrivilegeEscalation: false
 
 # OpenSearch Dashboards dependency configuration
 opensearch-dashboards:
