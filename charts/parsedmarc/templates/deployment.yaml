@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "parsedmarc.fullname" . }}
+  labels:
+    {{- include "parsedmarc.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.parsedmarc.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "parsedmarc.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "parsedmarc.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: parsedmarc
+          image: "{{ .Values.parsedmarc.image.repository }}:{{ .Values.parsedmarc.image.tag }}"
+          imagePullPolicy: {{ .Values.parsedmarc.image.pullPolicy }}
+          env:
+            - name: IMAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "parsedmarc.fullname" . }}
+                  key: imap-password
+            {{- if .Values.parsedmarc.smtp.password }}
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "parsedmarc.fullname" . }}
+                  key: smtp-password
+            {{- end }}
+            {{- if .Values.parsedmarc.splunk.token }}
+            - name: SPLUNK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "parsedmarc.fullname" . }}
+                  key: splunk-token
+            {{- end }}
+            {{- with .Values.parsedmarc.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/parsedmarc
+              readOnly: true
+          command:
+            - parsedmarc
+            - -c
+            - /etc/parsedmarc/parsedmarc.ini
+          resources:
+            {{- toYaml .Values.parsedmarc.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "parsedmarc.fullname" . }}
+      {{- with .Values.parsedmarc.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.parsedmarc.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.parsedmarc.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

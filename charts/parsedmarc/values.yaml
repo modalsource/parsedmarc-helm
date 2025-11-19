@@ -1,0 +1,134 @@
+# Default values for parsedmarc
+
+parsedmarc:
+  # Image configuration
+  image:
+    repository: ghcr.io/your-org/parsedmarc
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  # Number of replicas
+  replicaCount: 1
+
+  # Resources
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  # IMAP configuration for receiving DMARC reports
+  imap:
+    host: ""
+    port: 993
+    ssl: true
+    user: ""
+    password: ""
+    # Watch interval in seconds
+    watch: true
+    # Delete messages after processing
+    delete: false
+    # Test mode (don't actually delete messages)
+    test: false
+
+  # SMTP configuration for sending email notifications
+  smtp:
+    host: ""
+    port: 587
+    ssl: true
+    user: ""
+    password: ""
+    from: ""
+    to: []
+
+  # OpenSearch/Elasticsearch configuration
+  opensearch:
+    enabled: true
+    host: "parsedmarc-opensearch"
+    port: 9200
+    ssl: false
+    # SSL verification
+    sslCertVerification: false
+    # Index prefix
+    indexPrefix: "dmarc"
+
+  # Splunk HEC configuration (optional)
+  splunk:
+    enabled: false
+    hec: ""
+    token: ""
+    index: ""
+
+  # Kafka configuration (optional)
+  kafka:
+    enabled: false
+    hosts: []
+    topic: "parsedmarc"
+
+  # Additional environment variables
+  extraEnv: []
+
+  # Node selector
+  nodeSelector: {}
+
+  # Tolerations
+  tolerations: []
+
+  # Affinity
+  affinity: {}
+
+  # Service configuration (optional - parsedmarc doesn't expose HTTP by default)
+  service:
+    enabled: false
+    type: ClusterIP
+    port: 8080
+
+# OpenSearch dependency configuration
+opensearch:
+  enabled: true
+  replicas: 1
+  
+  # Resource limits
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+  # Persistence
+  persistence:
+    enabled: true
+    size: 8Gi
+
+  # Security configuration
+  config:
+    opensearch.yml: |
+      cluster.name: parsedmarc-cluster
+      network.host: 0.0.0.0
+      plugins.security.disabled: true
+
+# OpenSearch Dashboards dependency configuration
+opensearch-dashboards:
+  enabled: true
+  replicas: 1
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+  # OpenSearch connection
+  opensearchHosts: "http://parsedmarc-opensearch:9200"
+
+  # Service configuration
+  service:
+    type: ClusterIP
+    port: 5601

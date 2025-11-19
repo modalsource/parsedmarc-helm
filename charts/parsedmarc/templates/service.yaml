@@ -1,0 +1,17 @@
+{{- if .Values.parsedmarc.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "parsedmarc.fullname" . }}
+  labels:
+    {{- include "parsedmarc.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.parsedmarc.service.type }}
+  ports:
+    - port: {{ .Values.parsedmarc.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "parsedmarc.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,25 @@
+apiVersion: v2
+name: parsedmarc
+description: A Helm chart for parsedmarc - DMARC report analyzer
+type: application
+version: 0.1.0
+appVersion: "8.12.0"
+
+keywords:
+  - parsedmarc
+  - dmarc
+  - email
+  - security
+
+maintainers:
+  - name: parsedmarc-helm
+
+dependencies:
+  - name: opensearch
+    version: 2.18.0
+    repository: https://opensearch-project.github.io/helm-charts/
+    condition: opensearch.enabled
+  - name: opensearch-dashboards
+    version: 2.17.0
+    repository: https://opensearch-project.github.io/helm-charts/
+    condition: opensearch-dashboards.enabled

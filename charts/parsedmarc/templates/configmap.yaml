@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "parsedmarc.fullname" . }}
+  labels:
+    {{- include "parsedmarc.labels" . | nindent 4 }}
+data:
+  parsedmarc.ini: |
+    [general]
+    save_aggregate = True
+    save_forensic = True
+
+    [imap]
+    host = {{ .Values.parsedmarc.imap.host }}
+    port = {{ .Values.parsedmarc.imap.port }}
+    ssl = {{ .Values.parsedmarc.imap.ssl }}
+    user = {{ .Values.parsedmarc.imap.user }}
+    watch = {{ .Values.parsedmarc.imap.watch }}
+    delete = {{ .Values.parsedmarc.imap.delete }}
+    test = {{ .Values.parsedmarc.imap.test }}
+
+    {{- if .Values.parsedmarc.smtp.host }}
+    [smtp]
+    host = {{ .Values.parsedmarc.smtp.host }}
+    port = {{ .Values.parsedmarc.smtp.port }}
+    ssl = {{ .Values.parsedmarc.smtp.ssl }}
+    user = {{ .Values.parsedmarc.smtp.user }}
+    from = {{ .Values.parsedmarc.smtp.from }}
+    {{- if .Values.parsedmarc.smtp.to }}
+    to = {{ join "," .Values.parsedmarc.smtp.to }}
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.parsedmarc.opensearch.enabled }}
+    [opensearch]
+    hosts = {{ .Values.parsedmarc.opensearch.host }}:{{ .Values.parsedmarc.opensearch.port }}
+    ssl = {{ .Values.parsedmarc.opensearch.ssl }}
+    ssl_cert_verification = {{ .Values.parsedmarc.opensearch.sslCertVerification }}
+    index_suffix = {{ .Values.parsedmarc.opensearch.indexPrefix }}
+    {{- end }}
+
+    {{- if .Values.parsedmarc.splunk.enabled }}
+    [splunk_hec]
+    url = {{ .Values.parsedmarc.splunk.hec }}
+    index = {{ .Values.parsedmarc.splunk.index }}
+    {{- end }}
+
+    {{- if .Values.parsedmarc.kafka.enabled }}
+    [kafka]
+    hosts = {{ join "," .Values.parsedmarc.kafka.hosts }}
+    aggregate_topic = {{ .Values.parsedmarc.kafka.topic }}_aggregate
+    forensic_topic = {{ .Values.parsedmarc.kafka.topic }}_forensic
+    {{- end }}
